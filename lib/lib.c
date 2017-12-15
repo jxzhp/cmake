@@ -1,8 +1,29 @@
-#include <stdio.h>
+#include <curl/curl.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-int print_a(void)
+FILE *fp;
+static int write_data(void *ptr, size_t size, size_t nmemb, void *stream)
 {
-    printf("#################\n");
-    return 0;
+    int written = fwrite(ptr, size, nmemb, (FILE *)fp);
+    return written;
 }
 
+int run_curl(int verbose)
+{
+    const char * path = "/tmp/curl-test";
+    const char * mode = "w";
+
+    fp = fopen(path,mode);
+    curl_global_init(CURL_GLOBAL_ALL);
+    CURLcode res;
+
+    CURL *curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_URL, "http://www.linux-ren.org");
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, verbose);
+    res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    return 0;
+}
